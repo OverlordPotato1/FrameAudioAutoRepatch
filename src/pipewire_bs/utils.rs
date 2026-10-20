@@ -34,7 +34,9 @@ pub fn should_ignore(global: &GlobalObject<&DictRef>) -> bool {
   let port_channel = props.get("audio.channel");
   let port_path = props.get("object.path").unwrap();
   if DEBUG { println!("Check: Blocked names") }
-  if INSTANT_REJECT_NAME_FILTER.iter().any(|f| port_name.starts_with(f) && (!port_path.contains("vrlink") && port_name.starts_with("monitor_"))) { return true }
+  if !(port_path.contains("vrlink") && port_name.starts_with("monitor")) {
+    if INSTANT_REJECT_NAME_FILTER.iter().any(|f| port_name.starts_with(f)) { return true }
+  }
 
   if port_format.is_some() {
     if DEBUG { println!("Check: Blocked formats") }
