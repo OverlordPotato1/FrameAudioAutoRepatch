@@ -1,0 +1,79 @@
+name: Release (aarch64-unknown-linux-gnu)
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  BIN_NAME: FrameAudioAutoRepatch
+  TARGET: aarch64-unknown-linux-gnu
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-and-release:
+    name: Build & release
+    # Native arm64 runner -> no cross-compilation needed for libpipewire
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install native dependencies (libpipewire, clang for bindgen)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            pkg-config \
+            libpipewire-0.3-dev \
+            libclang-dev \
+            clang
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ env.TARGET }}
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build
+        run: cargo build --release --locked --target ${{ env.TARGET }}
+
+      - name: Package
+        id: package
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          if [ "${GITHUB_REF_TYPE}" != "tag" ]; then
+            VERSION="${GITHUB_SHA::8}"
+          fi
+          ARCHIVE="${BIN_NAME}-${VERSION}-${TARGET}.tar.gz"
+
+          mkdir -p dist
+          cp "target/${TARGET}/release/${BIN_NAME}" dist/
+          strip "dist/${BIN_NAME}" || true
+          tar -C dist -czf "${ARCHIVE}" "${BIN_NAME}"
+          sha256sum "${ARCHIVE}" > "${ARCHIVE}.sha256"
+
+          echo "archive=${ARCHIVE}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.BIN_NAME }}-${{ env.TARGET }}
+          path: |
+            ${{ steps.package.outputs.archive }}
+            ${{ steps.package.outputs.archive }}.sha256
+
+      - name: Create GitHub release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{ steps.package.outputs.archive }}
+            ${{ steps.package.outputs.archive }}.sha256
+          generate_release_notes: true
