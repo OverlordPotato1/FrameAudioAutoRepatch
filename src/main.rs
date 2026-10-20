@@ -12,7 +12,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 // Filters
-const INSTANT_REJECT_NAME_FILTER: [&str; 1] = ["monitor_"];
+const INSTANT_REJECT_NAME_FILTER: [&str; 2] = ["monitor_", "capture_"];
 const INSTANT_REJECT_FORMAT_FILTER: [&str; 1] = ["midi"];
 const INSTANT_REJECT_CHANNEL_FILTER: [&str; 7] = ["RL", "RR", "LFE", "FC", "LFE", "SL", "SR"];
 const INSTANT_REJECT_PATH_FILTER: [&str; 2] = ["sunshine", "sink-sunshine"];
