@@ -19,4 +19,8 @@ impl TrackedLink {
       _listener: listener
     }
   }
+  
+  pub(crate) fn into_proxy(self) -> Link {
+    self._proxy
+  }
 }

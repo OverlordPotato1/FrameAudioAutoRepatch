@@ -134,7 +134,7 @@ pub fn handle_metadata(state_add: &Rc<RefCell<State>>, registry_bind: &RegistryR
       if key == Some("default.audio.sink") {
         let name = value.and_then(parse_default_target_name);
         println!("default audio sink: {name:?}");
-        state_meta.borrow_mut().default_sink_name = name;
+        state_meta.borrow_mut().update_default_audio_sink(name);
         sync_meta();
       }
       0
