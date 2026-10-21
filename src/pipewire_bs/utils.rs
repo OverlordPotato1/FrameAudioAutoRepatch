@@ -82,9 +82,10 @@ pub fn create_sync_callback(core: &CoreRc, state: &Rc<RefCell<State>>) -> impl F
   }
 }
 
-pub fn create_core_listener(core: &CoreRc, state: &Rc<RefCell<State>>) -> Listener {
+pub fn create_core_listener(core: &CoreRc, registry: &RegistryRc, state: &Rc<RefCell<State>>) -> Listener {
   let state = state.clone();
   let core_cb = core.clone();
+  let registry_cb = registry.clone();
   core
     .add_listener_local()
     .done(move |id, seq| {
@@ -95,7 +96,7 @@ pub fn create_core_listener(core: &CoreRc, state: &Rc<RefCell<State>>) -> Listen
       if s.pending_sync == Some(seq) {
         s.pending_sync = None;
         s.report_changes();
-        s.autoconnect_disconnected(&core_cb);
+        s.autoconnect_disconnected(&core_cb, &registry_cb);
       }
     })
     .register()

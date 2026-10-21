@@ -28,7 +28,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
   let state: &'static Rc<RefCell<State>> = Box::leak(Box::new(Rc::new(RefCell::new(State::default()))));
 
   let request_sync = Rc::new(create_sync_callback(core, state));
-  let _core_listener = create_core_listener(core, state);
+  let _core_listener = create_core_listener(core, &registry, state);
 
   let _listener = {
     let state_add = state.clone();

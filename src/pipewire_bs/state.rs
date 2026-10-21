@@ -6,7 +6,7 @@ use pipewire::core::Core;
 use pipewire::link::Link;
 use pipewire::metadata::{Metadata, MetadataListener};
 use pipewire::properties::PropertiesBox;
-use pipewire::registry::GlobalObject;
+use pipewire::registry::{GlobalObject, Registry};
 use pipewire::spa::utils::result::AsyncSeq;
 use std::collections::{HashMap};
 use crate::pipewire_bs::link::LinkEndpoints;
@@ -195,14 +195,14 @@ impl State {
     Some(props)
   }
 
-  pub(crate) fn pull_back_from_node(&mut self, core: &Core, id: &u32) {
+  pub(crate) fn pull_back_from_node(&mut self, registry: &Registry, id: &u32) {
     let default_nodes = self.get_all_historical_sink_nodes();
     if default_nodes.is_empty() { return };
 
-    self.disconnect_nodes(core, id, default_nodes);
+    self.disconnect_nodes(registry, id, default_nodes);
   }
 
-  fn disconnect_nodes(&mut self, core: &Core, id: &u32, default_nodes: Vec<u32>) {
+  fn disconnect_nodes(&mut self, registry: &Registry, id: &u32, default_nodes: Vec<u32>) {
     let to_remove = self
       .tracked_links
       .iter()
@@ -214,19 +214,18 @@ impl State {
       .collect::<Vec<u32>>();
 
     for link_id in to_remove {
-      let Some(link) = self.tracked_links.remove(&link_id) else { continue };
-      match core.destroy_object(link.into_proxy()) {
+      match registry.destroy_global(link_id).into_result() {
         Ok(_) => println!("object {id}: delinking {link_id} from previous or current default output"),
-        Err(e) => eprintln!("object {id}: failed to delink {link_id}: {e}")
+        Err(e) => eprintln!("object {id}: failed to delink {link_id}: {e}"),
       }
     }
   }
 
-  pub(crate) fn disconnect_all_non_default_historical_sinks(&mut self, core: &Core, id: &u32) {
+  pub(crate) fn disconnect_all_non_default_historical_sinks(&mut self, registry: &Registry, id: &u32) {
     let default_nodes = self.get_non_default_sink_nodes();
     if default_nodes.is_empty() { return };
 
-    self.disconnect_nodes(core, id, default_nodes)
+    self.disconnect_nodes(registry, id, default_nodes)
   }
 
   /// Automatically links every disconnected audio output port to the default sink.
@@ -234,7 +233,7 @@ impl State {
   /// Scans all tracked output ports whose connection state is currently
   /// [`ConnectionState::Disconnected`] and, for each one, creates one or more
   /// PipeWire links to the matching input port(s) of the default sink node.
-  pub(crate) fn autoconnect_disconnected(&mut self, core: &Core) {
+  pub(crate) fn autoconnect_disconnected(&mut self, core: &Core, registry: &Registry) {
     let Some(sink_node) = self.get_default_sink_node() else { return };
     let sink_ports = self.get_default_sink_input_ports();
     if sink_ports.is_empty() { return };
@@ -264,13 +263,13 @@ impl State {
         }
         if abort {
           println!("aborting");
-          self.pull_back_from_node(core, &port_id);
+          self.pull_back_from_node(registry, &port_id);
           continue
         };
 
         // at this point, its confirmed all sinks the port is attached to are known historical outputs
         if !all_are_actually_default {
-          self.disconnect_all_non_default_historical_sinks(core, &port_id);
+          self.disconnect_all_non_default_historical_sinks(registry, &port_id);
         }
 
         if any_are_actually_default { continue };
