@@ -21,7 +21,7 @@ curl -fsSL https://raw.githubusercontent.com/OverlordPotato1/FrameAudioAutoRepat
 --------
 ### Troubleshooting
 
-`Failed to connect to user scope bus via local transport: No such file or directory`
+##### Failed to connect to user scope bus via local transport: No such file or directory
 The script attempts to set up the program to run on boot through a systemd service, this error means the systemd command was unable to reach systemd and so could not setup the service. The fix is simply to *not* use desktop mode konsole. Run the command through konsole launched from the Frame's UI through the "+" button.
 
 
