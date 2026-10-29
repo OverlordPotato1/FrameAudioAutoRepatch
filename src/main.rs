@@ -16,6 +16,7 @@ const INSTANT_REJECT_NAME_FILTER: [&str; 2] = ["monitor_", "capture_"];
 const INSTANT_REJECT_FORMAT_FILTER: [&str; 1] = ["midi"];
 const INSTANT_REJECT_CHANNEL_FILTER: [&str; 7] = ["RL", "RR", "LFE", "FC", "LFE", "SL", "SR"];
 const INSTANT_REJECT_PATH_FILTER: [&str; 2] = ["sunshine", "sink-sunshine"];
+const INVISIBLE_SINKS: [&str; 3] = ["vesktop", "fox", "recorder"]; // pretend these sinks do not exist in all conditions
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
   pw::init();

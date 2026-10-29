@@ -9,6 +9,7 @@ use pipewire::properties::PropertiesBox;
 use pipewire::registry::{GlobalObject, Registry};
 use pipewire::spa::utils::result::AsyncSeq;
 use std::collections::{HashMap};
+use crate::INVISIBLE_SINKS;
 use crate::pipewire_bs::link::LinkEndpoints;
 
 /// Internal state for tracking PipeWire global objects and the links between them.
@@ -101,6 +102,11 @@ impl State {
       .map(|(id, _)| *id)
   }
 
+  /// `node.name` of the tracked node with the given global id, if known.
+  fn get_node_name(&self, id: &u32) -> Option<&str> {
+    self.nodes.get(id).map(String::as_str)
+  }
+
   /// Global id of the node that is currently the default audio sink, if known.
   pub(crate) fn get_default_sink_node(&self) -> Option<u32> {
     let name = self.get_default_audio_sink_name()?;
@@ -109,7 +115,10 @@ impl State {
 
   pub(crate) fn get_non_default_sink_nodes(&self) -> Vec<u32> {
     let names = self.get_non_default_audio_sink_names();
-    names.iter().map(|n| self.find_node_by_name(n)).filter_map(|id| id).collect::<Vec<u32>>()
+    names.iter()
+      .filter(|n| !INVISIBLE_SINKS.iter().any(|sink| n.contains(sink)))
+      .map(|n| self.find_node_by_name(n)).filter_map(|id| id)
+      .collect::<Vec<u32>>()
   }
 
   pub (crate) fn get_all_historical_sink_nodes(&self) -> Vec<u32> {
@@ -253,6 +262,8 @@ impl State {
             any_are_actually_default = true;
             continue;
           }
+
+
 
           all_are_actually_default = false;
           if !non_default_sinks.contains(&peer_node) {
