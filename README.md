@@ -4,6 +4,7 @@ This is achieved by monitoring all changes in pipewire connections, and, upon de
 
 The installer sets this up as a service with systemd, meaning it will be automatically run on every boot. Theoretically, this means the fix will be completely invisible, and once installed it will require no input from you.
 
+
 ---
 
 ### Install
@@ -15,6 +16,13 @@ curl -fsSL https://raw.githubusercontent.com/OverlordPotato1/FrameAudioAutoRepat
 ```bash
 curl -fsSL https://raw.githubusercontent.com/OverlordPotato1/FrameAudioAutoRepatch/master/update.sh | bash
 ```
+
+
+--------
+### Troubleshooting
+
+##### Failed to connect to user scope bus via local transport: No such file or directory
+The script attempts to set up the program to run on boot through a systemd service, this error means the systemd command was unable to reach systemd and so could not setup the service. The fix is simply to *not* use desktop mode konsole. Run the command through konsole launched from the Frame's UI through the "+" button.
 
 
 --------
